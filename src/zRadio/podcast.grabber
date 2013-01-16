@@ -1,0 +1,138 @@
+#!/bin/bash
+
+# prod.ru podcast grabber.
+# Zorge.R - 2010
+
+
+grpath=${0%/*}
+
+#podcastname="nauka2-0"
+
+podcastname=`zenity --entry \
+        --title="Выбор подкаста" \
+        --text="Введите название подкаста:" \
+        --entry-text "nauka2-0" \\`
+
+#podcastid="0"
+#trackid="0"
+
+mkdir $grpath/tmp
+
+
+# качаем главную страницу подкаста
+wget -O $grpath/tmp/main.page http://$podcastname.rpod.ru/
+
+
+# вытаскиваем из нее список публикаций
+grep '^    <a class="rpad" amber="post:' "$grpath/tmp/main.page" | sed 's/<a class\=\"rpad\" amber\=\"post\://' | sed 's/^[ \t]*//' | awk -F\" '{print $1}' > $grpath/tmp/podcast.list
+
+# вытаскиваем из нее названия публикаций
+grep '^    <a class="rpad" amber="post:' "$grpath/tmp/main.page" | sed 's/<a class\=\"rpad\" amber\=\"post\://' | sed 's/^[ \t]*//' | awk -F\> '{print $2}' | awk -F\< '{print $1}' | sed 's/\&quot\;//g' > $grpath/tmp/podcast.name
+
+####################
+# Выбор публикации #
+####################
+
+# определяем количество публикаций
+podcastnum=`sed -n '$=' $grpath/tmp/podcast.list`
+
+# генерируем окно выбора публикации
+num="1"
+rm $grpath/tmp/public.list
+echo -ne 'zenity --list \
+          --title="Публикации подкаста $podcastname" \
+          --text="Выберите публикаци:" \
+          --column="ID публикации:" --column="Название:" \' > $grpath/tmp/public.list
+
+while [ $num -le $podcastnum ]
+do
+# определяем ID текущей публикации
+podcastid=`sed -n "$num"p"" $grpath/tmp/podcast.list`
+# определяем название публикации
+podcasttitle=`sed -n "$num"p"" $grpath/tmp/podcast.name`
+
+echo -ne "
+          $podcastid "'"'$podcasttitle'"'" \\" >> $grpath/tmp/public.list
+let num=$num+1
+done
+
+# Выводим список на экран
+#chmod 777 $grpath/tmp/public.list
+podcastid=`. $grpath/tmp/public.list`
+
+#pubnum="1p"
+#podcastid=`sed -n "$pubnum" $grpath/tmp/podcast.list`
+
+# качаем страницу публикации
+wget -O $grpath/tmp/podcast.page http://rpod.ru/$podcastid/
+
+
+# вытаскиваем из нее список записей
+grep '^         <a title="Скачать" href="' "$grpath/tmp/podcast.page" | sed 's/<a title\=\"Скачать\" href\=\"//' | sed 's/^[ \t]*//' | sed "s/http:\/\/rpod.ru\/get\/$podcastid\///" | awk -F\\/download\/ '{print $1}' > $grpath/tmp/track.list
+
+
+################
+# Выбор записи #
+################
+# определяем количество записей
+tracknum=`sed -n '$=' $grpath/tmp/track.list`
+
+# генерируем окно выбора записи
+num=1
+rm $grpath/tmp/track.show
+echo -ne 'zenity --list \
+          --title="Записи в публикации $podcastname" \
+          --text="Выберите запись:" \
+          --column="ID записи:" --column="Размер:" \' > $grpath/tmp/track.show
+
+while [ $num -le $tracknum ]
+do
+
+# определяем ID текущей записи
+trackid=`sed -n "$num"p"" $grpath/tmp/track.list`
+# определяем размер записи
+#podcasttitle=`sed -n "$num"p"" $grpath/tmp/podcast.name`
+
+echo -ne "
+          $trackid "'"'_undev$podcasttitle'"'" \\" >> $grpath/tmp/track.show
+let num=$num+1
+done
+
+# Выводим список на экран
+trackid=`. $grpath/tmp/track.show`
+
+
+#trcknum="1p"
+#trackid=`sed -n "$trcknum" $grpath/tmp/track.list`
+
+
+# биндим URL
+trackURL="http://rpod.ru/get/$podcastid/$trackid/download/"
+
+
+# открываем в плеере
+
+#vlc $trackURL&
+
+
+playername=`zenity --entry \
+        --title="Выбор плеера" \
+        --text="Введите название плеера (vlc, mlayer, ...):" \
+        --entry-text "vlc" \\`
+
+$playername $trackURL&
+
+# код вставки в html
+#
+#<object width="500" height="40" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"><param name="movie" value="http://s.rpod.ru/swf/playa.swf?xmlURL=http%3A%2F%2Fs.rpod.ru%2Fxml%2Faudio%2Fa$trackid.xml"></param><param name="allowfullscreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://s.rpod.ru/swf/playa.swf?xmlURL=http%3A%2F%2Fs.rpod.ru%2Fxml%2Faudio%2Fa120417.xml" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="500" height="40"></embed></object>
+#
+# или
+#<object width="500" height="40" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"><param name="movie" value="http://s.rpod.ru/swf/playa.swf?xmlURL=http://s.rpod.ru/xml/audio/a$trackid.xml"></param><param name="allowfullscreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://s.rpod.ru/swf/playa.swf?xmlURL=http://s.rpod.ru/xml/audio/a$trackid.xml" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="500" height="40"></embed></object>
+#
+
+
+# удаляем мусор
+rm -r $grpath/tmp
+
+
+

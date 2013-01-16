@@ -1,0 +1,128 @@
+#!/bin/sh
+
+# zPodcast - by Zorge.R - Motofan.ru
+# plese don't modify code.
+
+
+zpodpath=${0%/*}
+
+# get phone model
+ph_model=`cat /etc/modelnum.txt`
+# get phone model
+
+# mplayer find block
+
+if [ -f "/mmc/mmca1/.Programs/zMPlayer/bin/mplayer" ]
+then mplayer="/mmc/mmca1/.Programs/zMPlayer/bin/mplayer"
+elif [ -f "/mmc/mmca1/mgxbox/zMplayer/mplayer" ]
+then mplayer="/mmc/mmca1/mgxbox/zMplayer/mplayer"
+elif [ -f "/ezxlocal/download/mystuff/mgxbox/zMplayer/bin/mplayer" ]
+then mplayer="/ezxlocal/download/mystuff/mgxbox/zMplayer/bin/mplayer"
+elif [ -f "/mmc/mmca1/mgxbox/Mplayer/bin/mplayer" ]
+then mplayer="/mmc/mmca1/mgxbox/Mplayer/bin/mplayer"
+elif [ -f "/ezxlocal/download/mystuff/mgxbox/Mplayer/bin/mplayer" ]
+then mplayer="/ezxlocal/download/mystuff/mgxbox/Mplayer/bin/mplayer"
+else showQ "ERROR" "Mplayer not found. Exit."; Exit
+fi
+
+# mplayer find block
+
+# Исправляем путь для нетконфиг
+if [ ! -f "$zpodpath/netexec.fxd" ]
+then
+	# удаляем старый netexec.ini
+	rm $zpodpath/netexec.ini
+
+	# создаем новый конфиг для netexec
+	echo -ne "[NetExecConfig]
+Command = $zpodpath/init" > $zpodpath/netexec.ini
+	
+	# тач
+	touch $zpodpath/netexec.fxd
+fi
+# Исправляем путь для нетконфиг
+
+
+# fix mplayerGUI
+if [ ! -f "$mplayer.GUI.$ph_model" ]; then cp -f "$zpodpath/mplayer.GUI.$ph_model" "$mplayer.GUI.$ph_model"; fi
+mplayerGUI="$mplayer.GUI.$ph_model"
+# fix mplayerGUI
+
+# dolisten block
+dolisten()
+{
+	# выводим диалоговое окно, с указанием станции которая будет открыта
+	if [ "$radioname" != 0 ] && [ "$radioname" != "" ];then showQ "zPodcast" "Opening - $radioname" 2;fi
+	$mplayerGUI -u $radiourl
+	. $zpodpath/init
+}
+# dolisten block
+
+ifgprsON()
+{
+
+showRadio "zRadio" "           motofan.ru - r0.1
+Select action:" "Listen Radio" "Listen Podcast" "User stream"
+
+ret=$?
+[ $ret -eq 0 ] && exit
+
+case $ret in
+	1)	
+		. $zpodpath/radio
+		;;
+	2)	
+		. $zpodpath/podcast
+		;;
+	3)	
+		showTextEntry "$zpodpath/custom.stream.url" "zPodcast" "Enter URL to any stream:" 0
+		radiourl=`cat $zpodpath/custom.stream.url`
+		dolisten
+		;;
+	*)
+		;;
+esac
+
+}
+
+ifgprsOFF()
+{
+
+showRadio "zRadio" "           motofan.ru - r0.1
+Select action:" "Listen Radio" "Listen Podcast" "User stream" "GPRS mode"
+
+ret=$?
+[ $ret -eq 0 ] && exit
+
+case $ret in
+	1)	
+		. $zpodpath/radio
+		;;
+	2)	
+		. $zpodpath/podcast
+		;;
+	3)	
+		showTextEntry "$zpodpath/custom.stream.url" "zRadio" "Enter URL to any stream:" 0
+		radiourl=`cat $zpodpath/custom.stream.url`
+		dolisten
+		;;
+	4)	
+		if [ "$ph_model" = "EM30" ];then ph_model=E8;fi
+		if [ -f "$zpodpath/netexec.$ph_model" ];then $zpodpath/netexec.$ph_model;else showQ "Ooops." "No GPRS module for You device." 2; . $zpodpath/init;fi
+		;;
+	*)
+		;;
+esac
+
+}
+
+# проверяем, активен ли GPRS mode
+checkNETexec=`pidof netexec.$ph_model`
+
+if [ "$checkNETexec" != 0 ] && [ "$checkNETexec" != "" ]
+then
+	ifgprsON
+else
+	ifgprsOFF
+fi
+

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# zPodcast - by Zorge.R - Motofan.ru
+# plese don't modify code.
+
+showQ "zPodcast" "under development." 2
+
+. $zpodpath/init
+
