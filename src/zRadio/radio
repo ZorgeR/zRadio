@@ -3,14 +3,14 @@
 # zPodcast - by Zorge.R - Motofan.ru
 # plese don't modify code.
 
-showRadio "zRadio" "motofan.ru" "Listen CUSTOM radio" "Open Radio.list" "Listen RusRadio" "Listen DFM" "Listen Europa Plus"
+showRadio "$zp_NAME_APP" "$zp_CP_motofan_mini" "$zp_radio_lstn" "$zp_radio_list" "$zp_rd_op DFM" "$zp_rd_op radio21.Romania" "$zp_rd_op RusRadio" "$zp_rd_op Europa Plus"
 
 ret=$?
 [ $ret -eq 0 ] && $zpodpath/init
 
 case $ret in
 	1)	
-		showTextEntry "$zpodpath/custom.radio.url" "zPodcast" "Enter URL to radio (mp3, etc...)" 0
+		showTextEntry "$zpodpath/custom.radio.url" "$zp_NAME_APP" "$zp_radio_url" 0
 		radiourl=`cat $zpodpath/custom.radio.url`
 		if [ "$radiourl" != 0 ] && [ "$radiourl" != "" ]
 		then
@@ -22,7 +22,7 @@ case $ret in
 		# Парсим список радиостанций radio.list, для вывода юзеру
 		radiolist=`awk -F\= '{print $1}' $zpodpath/radio.list`
 		# Отображаем список радиостанций
-		showRadio "zPodcast" "Radio.list" $radiolist
+		showRadio "$zp_NAME_APP" "Radio.list" $radiolist
 		RADIORES=$?
 		if [ $RADIORES -eq 0 ]
 		then
@@ -38,16 +38,21 @@ case $ret in
 		fi
 		;;
 	3)	
-		radiourl="http://w02-sw01.akadostream.ru:8000/russianradio128.mp3"
-		radioname="Russian Radio"
-		dolisten
-		;;
-	4)	
 		radiourl="http://w02-sw01.akadostream.ru:8000/dinamitfm128.mp3"
 		radioname="DFM"
 		dolisten
 		;;
+	4)	
+		radiourl="http://89.238.252.138:8000"
+		radioname="radio21.Romania"
+		dolisten
+		;;
 	5)	
+		radiourl="http://w02-sw01.akadostream.ru:8000/russianradio128.mp3"
+		radioname="Russian Radio"
+		dolisten
+		;;
+	6)	
 		radiourl="http://w02-sw01.akadostream.ru:8000/europaplus128.mp3"
 		radioname="Europa Plus"
 		dolisten

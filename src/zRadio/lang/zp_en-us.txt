@@ -1,0 +1,85 @@
+
+##
+# ЯЗЫКОВОЙ ФАЙЛ ДЛЯ zRadio
+##
+
+##
+# ЯЗЫК - АМЕРИКАНСКИЙ АНГЛИЙСКИЙ
+##
+
+##
+# Основные переменные
+##
+zp_NAME_APP="zRadio"
+zp_CP_motofan="           motofan.ru -"
+zp_CP_motofan_mini="motofan.ru"
+zp_ERR="ОШИБКА"
+zp_ERR_MP="Mplayer не найден. Выход."
+zp_ERR_MP_GUI="Mplayer.GUI для вашей модели телефона, не найден. Выход."
+zp_KILL_MP="Обнаружен запущенный MPlayer. Закрыть его сейчас?"
+##
+# Переменные главного меню
+##
+zp_mm_action="Выберите действие"
+zp_mm_radio="Слушать радио"
+zp_mm_podcast="Слушать подкасты"
+zp_mm_tv="Смотреть ТВ"
+zp_mm_stream="Открыть поток"
+zp_mm_check_UPD="Проверить обновление"
+zp_mm_select_player="Выбрать плеер"
+zp_mm_GPRS="GPRS режим"
+##
+# Переменные "открыть поток"
+##
+zp_stream_HEAD="zRadio"
+zp_stream_URL="Введите ссылку на любой медиа поток (поддерживаемый MPlayer)"
+##
+# Переменные dolisten
+##
+zp_dolstn_OPEN="Запускаю"
+##
+# Переменные GPRS
+##
+zp_GPRS_ERR="Ой..."
+zp_GPRS_nomodule="Не найден модуль GPRS для Вашей модели телефона."
+##
+# Переменные UPDATE
+##
+zp_check_start="Поиск обновлений для"
+zp_check_upd_dneed="Обновлений для версии"
+rz_check_upd_dneed2="не найдено."
+zp_check_upd_need="Найдено обновление"
+zp_check_upd_do="Установка начнется немедленно."
+##
+# Переменные MD5
+##
+zp_MD5_check_STARTED="Начинаю проверку MD5sum..."
+zp_md5_err_head="ВНИМАНИЕ"
+zp_md5_err_txt="Проверка MD5sum провалена. Обновление невозможно."
+zp_MD5_check_FINISH="Проверка MD5sum пройдена успешно. Начинаю обновление..."
+zp_check_md5_inet_err="Невозможно получить md5sum. Проверьте интернет соединение."
+##
+# Переменные RADIO
+##
+zp_radio_lstn="Открыть радио URL"
+zp_radio_list="Открыть Radio.list"
+zp_rd_op="Слушать"
+zp_radio_url="Введите адрес радиостанции (mp3, shoutcast, icesact и др.)"
+##
+# Переменные PODCAST
+##
+zp_rpod_entr="Введите"
+zp_rpod_entr2="название подкаста с RPOD.ru"
+zp_rpod_exmpl="например"
+zp_pdcst_list="Список публикаций"
+zp_track_list="Список записей"
+##
+# Выбор плеера
+##
+zp_new_player_enter="Выберите плеер"
+zp_plr_new="Выбран"
+zp_new_current="Текущий"
+##
+# КОНЕЦ
+##
+

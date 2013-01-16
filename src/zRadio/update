@@ -1,0 +1,53 @@
+#!/bin/sh
+
+#
+# Z-Mod E8
+#
+# Please don't modify this code.
+#
+# Copyright - Zorge.R - 2010 - motofan.ru
+#
+
+showNotify "$zp_NAME_APP" "$zp_check_start - r$zp_vers" 1 3
+mkdir -p $zpodpath/upd/zRadio
+$zp_wget -O "$zpodpath/upd/zRadio/next.ver" http://rep.motofan.ru/unix/app/zRadio/next.ver
+
+zp_nextvers=`cat $zpodpath/upd/zRadio/next.ver`
+
+if [ $zp_nextvers -gt $zp_vers ]
+then
+	showNotify "$zp_NAME_APP" "$zp_check_upd_need r$zp_nextvers. $zp_check_upd_do" 1 5
+	$zp_wget -O $zpodpath/upd/zRadio/zRadio_r$zp_nextvers.upd http://rep.motofan.ru/unix/app/zRadio/zRadio_r$zp_nextvers.upd
+	$zp_wget -O $zpodpath/upd/zRadio/zRadio_r$zp_nextvers.md5sum http://rep.motofan.ru/unix/app/zRadio/zRadio_r$zp_nextvers.md5sum
+	zp_md5sum=`cat $zpodpath/upd/zRadio/zRadio_r$zp_nextvers.md5sum`
+# MD5CHECK START
+		if [ "$zp_md5sum" != "" ]
+		then
+			showNotify "$zp_NAME_APP" "$zp_MD5_check_STARTED" 0 1
+			cd $zpodpath/upd/zRadio/
+			md5sumcheck=`md5sum ./zRadio_r$zp_nextvers.upd | sed "s/  \.\/zRadio_r$zp_nextvers.upd$//"`
+			if [ "$zp_md5sum" != "$md5sumcheck" ]
+			then
+				showQ "$zp_md5_err_head" "$zp_md5_err_txt" 2
+				rm "$zpodpath/upd/zRadio/zRadio_r$zp_nextvers.upd"
+				rm "$zpodpath/upd/zRadio/zRadio_r$zp_nextvers.md5sum"
+			else
+				showNotify "$zp_NAME_APP" "$zp_MD5_check_FINISH" 0 1
+				# INSTALL
+	mkdir -p /ezxlocal/download/mystuff/.tmp/zradio
+	busybox tar -jxvf "$zpodpath/upd/zRadio/zRadio_r$zp_nextvers.upd" -C "/ezxlocal/download/mystuff/.tmp/zradio/"
+	cp -f /ezxlocal/download/mystuff/.tmp/zradio/zRadio/* "$zpodpath" -R
+	chmod 777 "$zpodpath" -R
+	rm -R /ezxlocal/download/mystuff/.tmp/zradio
+				# INSTALL
+			fi
+		else
+			showQ "$zp_ERR" "$zp_check_md5_inet_err" 2
+		fi
+# MD5CHECK END
+else
+	showQ "$zp_NAME_APP" "$zp_check_upd_dneed - r$zp_vers $rz_check_upd_dneed2" 2
+fi
+
+$zpodpath/init
+

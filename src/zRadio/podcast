@@ -3,7 +3,99 @@
 # zPodcast - by Zorge.R - Motofan.ru
 # plese don't modify code.
 
-showQ "zPodcast" "under development." 2
+#podcastname="nauka2-0"
+rm "$zpodpath/podcast.name"
+showTextEntry "$zpodpath/podcast.name" "$zp_NAME_APP" "$zp_rpod_entr
+$zp_rpod_entr2:
+$zp_rpod_exmpl 'nauka2-0'" 0
+podcastname=`cat $zpodpath/podcast.name`
+
+# чистим
+if [ -d $zpodpath/tmp ]; then rm -r $zpodpath/tmp ; fi
+mkdir $zpodpath/tmp
+
+# качаем главную страницу подкаста
+wget -O $zpodpath/tmp/main.page http://$podcastname.rpod.ru/
+
+# вытаскиваем из нее список публикаций
+grep '^    <a class="rpad" amber="post:' "$zpodpath/tmp/main.page" | sed 's/<a class\=\"rpad\" amber\=\"post\://' | sed 's/^[ \t]*//' | awk -F\" '{print $1}' > "$zpodpath/tmp/podcast.list"
+
+# вытаскиваем из нее названия публикаций
+grep '^    <a class="rpad" amber="post:' "$zpodpath/tmp/main.page" | sed 's/<a class\=\"rpad\" amber\=\"post\://' | sed 's/^[ \t]*//' | awk -F\> '{print $2}' | awk -F\< '{print $1}' | sed 's/\&quot\;//g' > "$zpodpath/tmp/podcast.title"
+
+####################
+# Выбор публикации #
+####################
+
+# определяем количество публикаций
+podcastnum=`sed -n '$=' $zpodpath/tmp/podcast.list`
+
+# генерируем окно выбора публикации
+num="1"
+
+echo -ne '#!/bin/sh
+	showRadio "$zp_NAME_APP" "$zp_pdcst_list :"' > "$zpodpath/tmp/podcast.show"
+
+while [ $num -le $podcastnum ]
+do
+# определяем ID текущей публикации
+podcast_to_show=`sed -n "$num"p"" $zpodpath/tmp/podcast.title`
+
+echo -ne " "'"'$podcast_to_show'"'"" >> "$zpodpath/tmp/podcast.show"
+
+let num=$num+1
+done
+
+# Выводим список на экран
+. $zpodpath/tmp/podcast.show
+podcast_sub_id=$?
+
+####################
+# Выбор публикации #
+####################
+
+# получем podcastid
+podcastid=`sed -n $podcast_sub_id\p $zpodpath/tmp/podcast.list`
+
+# качаем страницу публикации
+wget -O $zpodpath/tmp/podcast.page http://rpod.ru/$podcastid/
+
+# вытаскиваем из нее список записей
+grep '^         <a title="Скачать" href="' "$zpodpath/tmp/podcast.page" | sed 's/<a title\=\"Скачать\" href\=\"//' | sed 's/^[ \t]*//' | sed "s/http:\/\/rpod.ru\/get\/$podcastid\///" | awk -F\\/download\/ '{print $1}' > "$zpodpath/tmp/track.list"
+
+
+################
+# Выбор записи #
+################
+# определяем количество записей
+tracknum=`sed -n '$=' $zpodpath/tmp/track.list`
+
+# генерируем окно выбора записи
+num="1"
+
+echo -ne '#!/bin/sh
+	showRadio "$zp_NAME_APP" "$zp_track_list :"' > "$zpodpath/tmp/track.show"
+
+while [ $num -le $tracknum ]
+do
+# определяем ID текущей записи
+trackid=`sed -n "$num"p"" $zpodpath/tmp/track.list`
+echo -ne " "'"'$trackid'"'"" >> "$zpodpath/tmp/track.show"
+let num=$num+1
+done
+
+# Выводим список на экран
+. $zpodpath/tmp/track.show
+track_sub_id=$?
+
+# получем trackid
+trackid=`sed -n $track_sub_id\p $zpodpath/tmp/track.list`
+
+# биндим URL
+radiourl="http://rpod.ru/get/$podcastid/$trackid/download/"
+
+# открываем в плеере
+dolisten
 
 . $zpodpath/init
 

@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# zPodcast - by Zorge.R - Motofan.ru
+# plese don't modify code.
+
+# Парсим список радиостанций radio.list, для вывода юзеру
+tvlist=`awk -F\= '{print $1}' $zpodpath/tv.list`
+# Отображаем список радиостанций
+showRadio "$zp_NAME_APP" "TV.list" $tvlist
+RADIORES=$?
+if [ $RADIORES -eq 0 ]
+then
+	# если отмена, переходим в "RADIO"
+	. $zpodpath/init
+else
+	# захватываем название выбранной станции
+	tvname=`sed -n $RADIORES\p $zpodpath/tv.list | awk -F\= '{print $1}'`
+	# захватываем URL выбранной станции
+	tvurl=`sed -n $RADIORES\p $zpodpath/tv.list | awk -F\= '{print $2}'`
+	# Запуск плеера
+	dowatchtv
+fi
+

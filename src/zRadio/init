@@ -4,11 +4,60 @@
 # plese don't modify code.
 
 
-zpodpath=${0%/*}
+####################
+# Path block start #
+####################
+#--|root
+	zpodpath=${0%/*}
+#--|lang
+	zpod_lng=$zpodpath/lang
+##################
+# Path block end #
+##################
+
+####################
+# Lang block start #
+####################
+#--|local upd
+LANGSTR=`grep '^LanguageType = ' /ezx_user/download/appwrite/setup/ezx_system.cfg | sed 's,^LanguageType = ,,'`
+if [ "$LANGSTR" = "" ]
+then
+	LANGSTR="en-us"
+fi
+#--|upd lng file
+if [ ! -f "${zpod_lng}/zp_${LANGSTR}.txt" ]
+then
+	. "${zpod_lng}/zp_en-gb.txt"
+else
+	. "${zpod_lng}/zp_${LANGSTR}.txt"
+fi
+##################
+# Lang block end #
+##################
 
 # get phone model
 ph_model=`cat /etc/modelnum.txt`
 # get phone model
+
+# wget
+zp_wget="/bin/busybox wget"
+# wget
+
+# get zp_vers
+zp_vers=`cat $zpodpath/zp.vers`
+# get zp_vers
+
+# ilovedplayer
+ilovedplayer=`cat $zpodpath/userplayer`
+
+# проверяем, активен ли mplayer
+checkzRadio=`pidof mplayer`
+
+# предлогаем его закрыть, если он активен
+if [ "$checkzRadio" != 0 ] && [ "$checkzRadio" != "" ]; then showQ "$zp_NAME_APP" "$zp_KILL_MP" 1
+killplayer=$?
+if [ $killplayer -eq 1 ];then kill `pidof mplayer`; fi
+fi
 
 # mplayer find block
 
@@ -22,7 +71,21 @@ elif [ -f "/mmc/mmca1/mgxbox/Mplayer/bin/mplayer" ]
 then mplayer="/mmc/mmca1/mgxbox/Mplayer/bin/mplayer"
 elif [ -f "/ezxlocal/download/mystuff/mgxbox/Mplayer/bin/mplayer" ]
 then mplayer="/ezxlocal/download/mystuff/mgxbox/Mplayer/bin/mplayer"
-else showQ "ERROR" "Mplayer not found. Exit."; Exit
+elif [ -f "/ezxlocal/download/mystuff/.mplayer/mplayer/mplayer" ]
+then mplayer="/ezxlocal/download/mystuff/.mplayer/mplayer/mplayer"
+elif [ -f "/mmc/mmca1/.mplayer/mplayer/mplayer" ]
+then mplayer="/mmc/mmca1/.mplayer/mplayer/mplayer"
+elif [ -f "/ezxlocal/download/mystuff/.mplayer/mplayer" ]
+then mplayer="/ezxlocal/download/mystuff/.mplayer/mplayer"
+elif [ -f "/mmc/mmca1/.mplayer/mplayer" ]
+then mplayer="/mmc/mmca1/.mplayer/mplayer"
+elif [ -f "/mmc/movinand1/.zmodstuff/mplayer/mplayer" ]
+then mplayer="/mmc/movinand1/.zmodstuff/mplayer/mplayer"
+elif [ -f "/mmc/movinand1/mpkgbox/mplayer/mplayer" ]
+then mplayer="/mmc/movinand1/mpkgbox/mplayer/mplayer"
+elif [ -f "/mmc/mmca1/mpkgbox/mplayer/mplayer" ]
+then mplayer="/mmc/mmca1/mpkgbox/mplayer/mplayer"
+else showQ "$zp_ERR" "$zp_ERR_MP"
 fi
 
 # mplayer find block
@@ -42,27 +105,47 @@ Command = $zpodpath/init" > $zpodpath/netexec.ini
 fi
 # Исправляем путь для нетконфиг
 
-
 # fix mplayerGUI
 if [ ! -f "$mplayer.GUI.$ph_model" ]; then cp -f "$zpodpath/mplayer.GUI.$ph_model" "$mplayer.GUI.$ph_model"; fi
 mplayerGUI="$mplayer.GUI.$ph_model"
 # fix mplayerGUI
 
+# mplayer.GUI check
+if [ ! -f "$mplayer.GUI.$ph_model" ]; then showQ "$zp_ERR" "$zp_ERR_MP_GUI"; exit; fi
+# mplayer.GUI check
+
 # dolisten block
 dolisten()
 {
 	# выводим диалоговое окно, с указанием станции которая будет открыта
-	if [ "$radioname" != 0 ] && [ "$radioname" != "" ];then showQ "zPodcast" "Opening - $radioname" 2;fi
-	$mplayerGUI -u $radiourl
+	if [ "$radioname" != 0 ] && [ "$radioname" != "" ];then showQ "$zp_NAME_APP" "$zp_dolstn_OPEN - $radioname" 2;fi
+	if [ "$ilovedplayer" = "MPlayer" ]
+	then
+	# запускаем
+	$mplayerGUI -u "$radiourl"
+	else
+	mediaplayer -d "$radiourl"
+	fi
+	# открываем zRadio еще разок, после прослушивания
 	. $zpodpath/init
 }
 # dolisten block
 
+dowatchtv()
+{
+	# выводим диалоговое окно, с указанием канала который будет открыт
+	if [ "$tvname" != 0 ] && [ "$tvname" != "" ];then showQ "$zp_NAME_APP" "$zp_dolstn_OPEN - $tvname" 2;fi
+	# запускаем
+	mediaplayer -d "$tvurl"
+	# открываем zRadio еще разок, после прослушивания
+	. $zpodpath/init
+}
+
 ifgprsON()
 {
 
-showRadio "zRadio" "           motofan.ru - r0.1
-Select action:" "Listen Radio" "Listen Podcast" "User stream"
+showRadio "$zp_NAME_APP" "$zp_CP_motofan r$zp_vers
+$zp_mm_action:" "$zp_mm_radio" "$zp_mm_podcast" "$zp_mm_tv" "$zp_mm_stream" "$zp_mm_check_UPD" "$zp_mm_select_player"
 
 ret=$?
 [ $ret -eq 0 ] && exit
@@ -74,10 +157,28 @@ case $ret in
 	2)	
 		. $zpodpath/podcast
 		;;
-	3)	
-		showTextEntry "$zpodpath/custom.stream.url" "zPodcast" "Enter URL to any stream:" 0
+	3)
+		. $zpodpath/tv
+		;;
+	4)	
+		showTextEntry "$zpodpath/custom.stream.url" "$zp_stream_HEAD" "$zp_stream_URL:" 0
 		radiourl=`cat $zpodpath/custom.stream.url`
 		dolisten
+		;;
+	5)
+		. $zpodpath/update
+		;;
+	6)
+		showRadio "$zp_APP_NAME" "$zp_new_player_enter:
+$zp_new_current: $ilovedplayer" "MPlayer" "MediaPlayer"
+		plID=$?
+		if [ $plID -eq 2 ]
+		then rm "$zpodpath/userplayer"; echo -ne "MediaPlayer" > "$zpodpath/userplayer"
+		else rm "$zpodpath/userplayer"; echo -ne "MPlayer" > "$zpodpath/userplayer"
+		fi
+		ilovedplayer=`cat $zpodpath/userplayer`
+		showQ "$zp_APP_NAME" "$zp_plr_new - $ilovedplayer" 2
+		. $zpodpath/init
 		;;
 	*)
 		;;
@@ -88,8 +189,8 @@ esac
 ifgprsOFF()
 {
 
-showRadio "zRadio" "           motofan.ru - r0.1
-Select action:" "Listen Radio" "Listen Podcast" "User stream" "GPRS mode"
+showRadio "$zp_NAME_APP" "$zp_CP_motofan r$zp_vers
+$zp_mm_action:" "$zp_mm_radio" "$zp_mm_podcast" "$zp_mm_tv" "$zp_mm_stream" "$zp_mm_check_UPD" "$zp_mm_select_player" "$zp_mm_GPRS"
 
 ret=$?
 [ $ret -eq 0 ] && exit
@@ -101,14 +202,32 @@ case $ret in
 	2)	
 		. $zpodpath/podcast
 		;;
-	3)	
-		showTextEntry "$zpodpath/custom.stream.url" "zRadio" "Enter URL to any stream:" 0
+	3)
+		. $zpodpath/tv
+		;;
+	4)	
+		showTextEntry "$zpodpath/custom.stream.url" "$zp_stream_HEAD" "$zp_stream_URL:" 0
 		radiourl=`cat $zpodpath/custom.stream.url`
 		dolisten
 		;;
-	4)	
+	5)	
+		. $zpodpath/update
+		;;
+	6)
+		showRadio "$zp_APP_NAME" "$zp_new_player_enter:
+$zp_new_current: $ilovedplayer" "MPlayer" "MediaPlayer"
+		plID=$?
+		if [ $plID -eq 2 ]
+		then rm "$zpodpath/userplayer"; echo -ne "MediaPlayer" > "$zpodpath/userplayer"
+		else rm "$zpodpath/userplayer"; echo -ne "MPlayer" > "$zpodpath/userplayer"
+		fi
+		ilovedplayer=`cat $zpodpath/userplayer`
+		showQ "$zp_APP_NAME" "$zp_plr_new - $ilovedplayer" 2
+		. $zpodpath/init
+		;;
+	7)
 		if [ "$ph_model" = "EM30" ];then ph_model=E8;fi
-		if [ -f "$zpodpath/netexec.$ph_model" ];then $zpodpath/netexec.$ph_model;else showQ "Ooops." "No GPRS module for You device." 2; . $zpodpath/init;fi
+		if [ -f "$zpodpath/netexec.$ph_model" ];then $zpodpath/netexec.$ph_model;else showQ "$zp_GPRS_ERR" "$zp_GPRS_nomodule" 2; . $zpodpath/init;fi
 		;;
 	*)
 		;;
